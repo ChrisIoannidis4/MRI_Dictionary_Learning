@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 
 def Initialize_Dictionaries(Global_Descriptors, Weights, Dictionary_Size):
     
-    k=Dictionary_Size
+    k = Dictionary_Size
 
     descr_kmeans=KMeans(n_clusters=k, random_state=0)
     descr_kmeans.fit(Global_Descriptors)
