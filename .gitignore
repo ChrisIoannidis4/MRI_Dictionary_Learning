@@ -4,3 +4,8 @@ junk
 masks
 MRI_Arrays
 subjects
+roi_masks
+segm_masks_dataset
+MRI_Dataset
+local_descriptors
+roi_masks_dataset

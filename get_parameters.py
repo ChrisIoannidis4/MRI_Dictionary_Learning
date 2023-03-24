@@ -17,7 +17,7 @@ sift = cv2.xfeatures2d.SIFT_create()
 #This function will be used to access the file location of the MRI's
 #and the masks
 
-def get_lists_of_of_paths(directory , ):
+def get_lists_of_of_paths(directory ):
     file_list = os.listdir(directory)
     file_paths = []
     for file in file_list:
@@ -53,8 +53,6 @@ def get_images(path_to_images):
     return mri_images
 
 
-
-
 # We don the same for the masks, using SimpleITK for the segmentation
 # masks and np.load for the Region_Of_Interest
 # (roi) masks, all in ./masks/<sample_id>/ 
@@ -70,11 +68,9 @@ def get_masks(path_to_images):
         roi_masks.append(np.load(mid_file[3]))
 
         segm_mask = sitk.ReadImage(mid_file[1], sitk.sitkFloat32)
-        segm_masks.append(sitk.GetArrayViewFromImage(segm_mask))
+        segm_masks.append(sitk.GetArrayFromImage(segm_mask))
 
     return segm_masks, roi_masks
-  
-  
   
 
 
@@ -84,7 +80,6 @@ def get_masks(path_to_images):
 def append_to_coordinates(array1, array2, starting_index):
     for i in range(starting_index,starting_index+100):
         array1.append(array2[i])
-
 
 
 
@@ -101,18 +96,18 @@ def makeshiftSIFT(array3d, x_coordinate, y_coordinate, z_coordinate ):
     XZaxis=array3d[:,y_coordinate,:]
     YZaxis=array3d[x_coordinate,:,:]
 
-    gray = cv2.cvtColor(XYaxis, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.cvtColor(XYaxis, cv2.COLOR_BGR2GRAY)
     keypoint1= cv2.KeyPoint(x_coordinate, y_coordinate, 1)
-    _, descriptor1 = sift.compute(gray, keypoint1)
+    _, descriptor1 = sift.compute(XYaxis, keypoint1)
 
 
-    gray = cv2.cvtColor(XZaxis, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.cvtColor(XZaxis, cv2.COLOR_BGR2GRAY)
     keypoint2= cv2.KeyPoint(x_coordinate, z_coordinate, 1)
-    _, descriptor2 = sift.compute(gray, keypoint2)
+    _, descriptor2 = sift.compute(XZaxis, keypoint2)
 
-    gray = cv2.cvtColor(XZaxis, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.cvtColor(XZaxis, cv2.COLOR_BGR2GRAY)
     keypoint3= cv2.KeyPoint(y_coordinate, z_coordinate, 1)
-    _, descriptor3 = sift.compute(gray, keypoint3)
+    _, descriptor3 = sift.compute(XZaxis, keypoint3)
 
 
     descriptor = descriptor1 + descriptor2 + descriptor3 
@@ -121,15 +116,13 @@ def makeshiftSIFT(array3d, x_coordinate, y_coordinate, z_coordinate ):
     return descriptor
 
 
-
-
 #We use the makeshiftSIFT function to extract the local descriptors doing 
 #a weighted sampling based on the labels mask, which we use to identify to 
 #which class each voxel of the MRI scan belongs to. We focus the sampling on 
 #the cartilage classes.
 #It takes as input the MRI scan array and the segmentation mask array that 
 #were created with the previous funcitons, and returns the full dataset of the
-#local descriptors.
+#descriptors 
 
 def compute_descriptors(image, segmetation_mask):
 
@@ -166,15 +159,11 @@ def compute_descriptors(image, segmetation_mask):
         all_descriptors.append(makeshiftSIFT(image, coordinate[0], coordinate[1], coordinate[2]))
 
     return all_descriptors, ListOfCoordinates
-
-
     
 
-#The function below takes the list of descriptors as the training/testing 
-#datasets and, after doing a Grid Search in the first run, we select the best 
-#hypermarameters to find the W vector for each MRI scan. We do that by getting 
-#the classes from the segmentation mask that has the info of which class
-#each voxel belongs to.
+
+#The function takes as input the dataset of  
+
 
 def image_specific_SVM(coordinates, descriptors, array_with_labels):
 
@@ -191,7 +180,7 @@ def image_specific_SVM(coordinates, descriptors, array_with_labels):
                 'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
                 'kernel': ['rbf']} 
     
-    grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3, cv=5)
+    grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3)
     
     # fitting the model for grid search
     grid.fit(x_train, y_train)
@@ -205,10 +194,7 @@ def image_specific_SVM(coordinates, descriptors, array_with_labels):
 
 
 
-#This function is core to the implementation of our variation of the Bag Of Words
-#algorithm. It implements KMeans to find the 50 'most frequently' used local descriptors
-#across all scans and creates a (normalized) histogram with soft assignment to class centers 
-#from local descriptors.
+
 
 def descriptor_soft_assign(feature_vectors, no_of_words, descriptors, a=1):
     
@@ -232,14 +218,6 @@ def descriptor_soft_assign(feature_vectors, no_of_words, descriptors, a=1):
     
     return assignment_histograms
 
-
-
-
-# We do a double KMeans clustering in the coodinates of the ROI to find the cluster
-# centers of the spatial information. That way, there is a number of subregions 
-# defined by these cluster centers. We will use these subregions as a tool to 
-# not lose the aforementioned spatial information when computing the global 
-# descriptors.
 
 def define_subregions(roi_mask):
     indices = np.where(roi_mask == 1)
@@ -284,9 +262,7 @@ def define_subregions(roi_mask):
     return labeled_array, Final_Cluster_Dict
 
 
-# We apply the process of our variation of the Bag Of Words using the soft
-# assignment method to create the histogram/descriptor of each of the subregions.
-# We concatenate the histograms to create the global descriptor.
+
 
 def global_descriptor(image, all_descriptors, subregion1_indeces, subregion2_indeces, subregion3_indeces):
 
@@ -326,9 +302,7 @@ def global_descriptor(image, all_descriptors, subregion1_indeces, subregion2_ind
 
 
 
-#We create all our grobal descriptors as well as all our weight vectors to create 
-#the Global Descriptor dataset and our Weight dataset, between which we will try to 
-#find an intrinsic relationship in the next steps.
+
 
 def get_atlas(images_array, roi_array, classes_array):
 
