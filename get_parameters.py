@@ -200,7 +200,7 @@ def descriptor_soft_assign(feature_vectors, no_of_words, descriptors, a=1):
     
 
     random_state=1
-    kmeans_model=KMeans(n_clusters=no_of_words, verbose=False, init='random', random_state=random_state, n_init=3)
+    kmeans_model=KMeans(n_clusters=no_of_words, verbose=False, init='k-means++', random_state=random_state)
     kmeans_model.fit(descriptors)
 
     assignments=np.zeros(no_of_words)
