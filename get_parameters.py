@@ -116,6 +116,7 @@ def makeshiftSIFT(array3d, x_coordinate, y_coordinate, z_coordinate ):
     return descriptor
 
 
+
 #We use the makeshiftSIFT function to extract the local descriptors doing 
 #a weighted sampling based on the labels mask, which we use to identify to 
 #which class each voxel of the MRI scan belongs to. We focus the sampling on 
@@ -162,8 +163,9 @@ def compute_descriptors(image, segmetation_mask):
     
 
 
-#The function takes as input the dataset of  
-
+#The function takes as input the dataset of descriptors for an image and
+# its labels array (for y_train/test) and, for the first run we perform a 
+# grid search to find the best parameters C, gamma.
 
 def image_specific_SVM(coordinates, descriptors, array_with_labels):
 
@@ -190,7 +192,6 @@ def image_specific_SVM(coordinates, descriptors, array_with_labels):
     W = classifier.coeff_
 
     return W
-# weights=image_specific_SVM(ListOfCoordinates, all_descriptors, classes_array)
 
 
 
@@ -198,7 +199,6 @@ def image_specific_SVM(coordinates, descriptors, array_with_labels):
 
 def descriptor_soft_assign(feature_vectors, no_of_words, descriptors, a=1):
     
-
     random_state=1
     kmeans_model=KMeans(n_clusters=no_of_words, verbose=False, init='k-means++', random_state=random_state)
     kmeans_model.fit(descriptors)
