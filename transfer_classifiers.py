@@ -1,6 +1,7 @@
 from optimization_problems import *
 
 
+#we follow the transfer classifier guidelines of Tian
 def transfer_classifiers(Dx, Dw, M, image, lamda, all_descriptors):
 
     image_descriptor = global_descriptor(image, all_descriptors)
