@@ -35,7 +35,7 @@ We now have our Dx, Dw, Λw, and M, and we can now go on to the optimization pro
 2. update Λw: **this is yet to be done**
 3. update Dx, Dw: we solve the quadratically constrained quadratic program problem ||X-Dx*Λx||(F) ^2 + ||W - Dw * Λw||(F) ^2, with cvxpy.
 4. update M: We update M by solving the closed form solution M = Λw * Λx.T *  (( Λx* Λx.T + (λ/γ) * Ι) ^-1 ).
-**repeat unitl convergency**
+**repeat untιl convergency**
 
 The above procedure is done iwth the functions in **optimization_problem.py**.
 
