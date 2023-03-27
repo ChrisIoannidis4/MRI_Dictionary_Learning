@@ -219,6 +219,10 @@ def descriptor_soft_assign(feature_vectors, no_of_words, descriptors, a=1):
     return assignment_histograms
 
 
+
+
+
+
 def define_subregions(roi_mask):
     indices = np.where(roi_mask == 1)
 
