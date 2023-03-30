@@ -78,9 +78,10 @@ def get_masks(path_to_images):
 # descriptors (feature vectors) datasets for our classification algorithmm 
 
 def append_to_coordinates(array1, array2, starting_index):
-    for i in range(starting_index,starting_index+100):
+    for i in range(starting_index,starting_index+300):
         array1.append(array2[i])
-
+        i+=3
+    
 
 
 # This function computes the SIFT descriptor on the 2D axis, along each
